@@ -10,19 +10,7 @@ const supabase = createClient(
 
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 
-class PipelineSingleton {
-  static task = 'feature-extraction' as const;
-  static model = 'Xenova/all-MiniLM-L6-v2';
-  static instance: any = null;
 
-  static async getInstance() {
-    if (this.instance === null) {
-      const { pipeline } = await import('@xenova/transformers');
-      this.instance = await pipeline(this.task, this.model);
-    }
-    return this.instance;
-  }
-}
 
 export async function POST(req: Request) {
   try {
@@ -35,14 +23,12 @@ export async function POST(req: Request) {
       );
     }
 
-    const embedder = await PipelineSingleton.getInstance();
+    const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
+    const embeddingRes = await embedModel.embedContent({
+      content: { parts: [{ text: message }] },
+    });
     
-    // Improved query embedding accuracy with instructional prefix
-    const queryInput = "Represent this query for retrieving relevant product information: " + message;
-    const output = await embedder(queryInput, { pooling: "mean", normalize: true });
-    
-    // @ts-ignore
-    const queryEmbedding = Array.from(output.data);
+    const queryEmbedding = embeddingRes.embedding.values;
 
     // Filter noise with tight match_count
     const { data: rawMatches, error } = await supabase.rpc("match_documents", {
@@ -62,7 +48,7 @@ export async function POST(req: Request) {
     console.log(rawMatches, "matches");
 
     // Strict threshold logic
-    const THRESHOLD = 0.15;
+    const THRESHOLD = 0.5;
     const matches = (rawMatches || []).filter((d: any) => d.similarity > THRESHOLD);
 
     if (matches.length === 0) {
