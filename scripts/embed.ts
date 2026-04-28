@@ -33,9 +33,7 @@ async function embed() {
   });
 
   for (const chunk of chunks) {
-    const embeddingRes = await embedModel.embedContent({
-      content: { parts: [{ text: chunk }] },
-    });
+    const embeddingRes = await embedModel.embedContent(chunk);
 
     const embedding = embeddingRes.embedding.values;
 

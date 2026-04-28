@@ -24,9 +24,7 @@ export async function POST(req: Request) {
     }
 
     const embedModel = genAI.getGenerativeModel({ model: "text-embedding-004" });
-    const embeddingRes = await embedModel.embedContent({
-      content: { parts: [{ text: message }] },
-    });
+    const embeddingRes = await embedModel.embedContent(message);
     
     const queryEmbedding = embeddingRes.embedding.values;
 
