@@ -29,7 +29,7 @@ async function embed() {
   console.log(`🔹 Total chunks created: ${chunks.length}`);
 
   const embedModel = genAI.getGenerativeModel({
-    model: "text-embedding-004",
+    model: "gemini-embedding-001",
   });
 
   for (const chunk of chunks) {
